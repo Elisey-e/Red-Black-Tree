@@ -22,15 +22,14 @@ namespace Trees {
 
                     ~Node() { delete left_; delete right_; }
 
-                private:
                     Node *parent_ = nullptr, *left_ = nullptr, *right_ = nullptr;
-                    char color = "R";
+                    char color = 'R';
 
             }; // внутренний узел
 
             using iterator = Node *; // положение внутри дерева
 
-            Node *top_; 
+            Node *top_ = nullptr; 
 
             iterator find_node(iterator curr, KeyT& key) const{
                 if (curr == nullptr){
@@ -70,21 +69,21 @@ namespace Trees {
                         return 0;
                     }
                     if (snd->parent_ == highest_common){
-                        return distance(fst, snd->parent_)
+                        return distance(fst, snd->parent_);
                     }
                     if ((snd->parent_)->left_ == snd){
-                        return distance(fst, snd->parent_)          // Тут надо в вызыватель добавить +snd.size_of_child_tree
+                        return distance(fst, snd->parent_);          // Тут надо в вызыватель добавить +snd.size_of_child_tree
                     }
-                    return distance(fst, snd->parent_) + 1 + size_of_child_tree(snd->parent_->left)
+                    return distance(fst, snd->parent_) + 1 + size_of_child_tree(snd->parent_->left);
                 }
                 else{
                     if (fst->parent_ == highest_common){
-                        return distance(fst->parent_, snd) + 1
+                        return distance(fst->parent_, snd) + 1;
                     }
                     if ((fst->parent_)->right_ == fst){
-                        return distance(fst->parent_, snd)          // Тут надо в вызыватель добавить +snd.size_of_child_tree
+                        return distance(fst->parent_, snd);          // Тут надо в вызыватель добавить +snd.size_of_child_tree
                     }
-                    return distance(fst->parent_, snd) + 1 + size_of_child_tree(fst->parent_->right)
+                    return distance(fst->parent_, snd) + 1 + size_of_child_tree(fst->parent_->right);
                 }
                 //если fst или snd смотрим размер поддерева fst справа, snd слева, запускаем дистанс от родителей этих узлов
             };
@@ -114,18 +113,18 @@ namespace Trees {
                 if (highest == nullptr){
                     return 0;
                 }
-                return size_of_child_tree(highest->left_) + 1 + size_of_child_tree(highest->right_)
+                return size_of_child_tree(highest->left_) + 1 + size_of_child_tree(highest->right_);
             }
         private:    //балансировка дерева
 
-            void balance_case_1(iterator X, iterator P, iterator G, iterator U){
-                P->color = "B";
-                U->color = "B";
-                G->color = "R";
+            void balance_case_1(iterator P, iterator G, iterator U){
+                P->color = 'B';
+                U->color = 'B';
+                G->color = 'R';
                 balance_tree(G);
             }
 
-            void balance_case_2(iterator X, iterator P, iterator G, iterator U){
+            void balance_case_2(iterator X, iterator P, iterator G){
                 P->parent_= X;
                 X->parent_ = G;
                 if (P->right_ == X){
@@ -140,29 +139,29 @@ namespace Trees {
                     G->right_ = X;
                     P->left_->parent_ = P;
                 }
-                balance_case_3(P, X, G, U)
+                balance_case_3(P, X, G);
             }
 
-            void balance_case_3(iterator X, iterator P, iterator G, iterator U){
-                P->color = "B";
-                G->color = "R";
+            void balance_case_3(iterator X, iterator P, iterator G){
+                P->color = 'B';
+                G->color = 'R';
                 P->parent_ = G->parent_;
                 G->parent_ = P;
 
-                if (P->parent_->left == G)
-                    P->parent_->left = P;
+                if (P->parent_->left_ == G)
+                    P->parent_->left_ = P;
                 else
                     P->parent_->right_ = P;
                 
                 if (P->left_ == X){
                     G->left_ = P->right_;
                     P->right_ = G;
-                    G->left_->parent = G;
+                    G->left_->parent_ = G;
                 }
                 else{
                     G->right_ = P->left_;
                     P->left_ = G;
-                    G->right_->parent = G;
+                    G->right_->parent_ = G;
                 }
             }
 
@@ -177,24 +176,24 @@ namespace Trees {
                 else{
                     U = G->left_;
                 }
-                if (U->color == "R"){   // дядя красный
-                    balance_case_1(X, P, G, U);
+                if (U->color == 'R'){   // дядя красный
+                    balance_case_1(P, G, U);
                 }
-                else if (U->color == "B"){ // дядя черный
+                else if (U->color == 'B'){ // дядя черный
                     if (P->right_ == X){
                         if (G->left_ == P){
-                            balance_case_2(X, P, G, U);
+                            balance_case_2(X, P, G);
                         }
                         else{
-                            balance_case_3(X, P, G, U);
+                            balance_case_3(X, P, G);
                         }
                     }
                     else{
                         if (G->right_ == X){
-                            balance_case_2(X, P, G, U);
+                            balance_case_2(X, P, G);
                         }
                         else{
-                            balance_case_3(X, P, G, U);
+                            balance_case_3(X, P, G);
                         }
                     }
                 }
@@ -207,7 +206,7 @@ namespace Trees {
                         X->parent_ = highest;
                         return 1;
                     }
-                    insert_rec(X, highest->right_);
+                    return insert_rec(X, highest->right_);
                 }
                 else if (X->key_ < highest->key_){
                     if (highest->right_ == nullptr){
@@ -215,20 +214,23 @@ namespace Trees {
                         X->parent_ = highest;
                         return 1;
                     }
-                    insert_rec(X, highest->left_);
+                    return insert_rec(X, highest->left_);
                 }
-                else{
-                    return 0;
-                }
+                return 0;
             }
         
         public: // модификаторы
             void insert(KeyT key){
                 //Ищем нужное место, прицепляем с красным цветом, вызываем балансировку
-                Node X(key); // Проверить, что сохранилось
-                if(insert_rec(X, top_)){
-                    balance_tree(X);
+                Node X{key};
+                if (top_ == nullptr){
+                    top_ = &X;
+                    return;
                 }
+                if(insert_rec(&X, top_)){
+                    balance_tree(&X);
+                }
+                cout << &X << "\n";
                 return;
             }
     };
