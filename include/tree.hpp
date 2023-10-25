@@ -122,6 +122,7 @@ namespace Trees {
                 U->color = 'B';
                 G->color = 'R';
                 balance_tree(G);
+                return;
             }
 
             void balance_case_2(iterator X, iterator P, iterator G){
@@ -142,6 +143,7 @@ namespace Trees {
                         P->left_->parent_ = P;
                 }
                 balance_case_3(P, X, G);
+                return;
             }
 
             void balance_case_3(iterator X, iterator P, iterator G){
@@ -150,27 +152,39 @@ namespace Trees {
                 P->parent_ = G->parent_;
                 G->parent_ = P;
                 if (P->parent_ != nullptr){
+                    
                     if (P->parent_->left_ == G)
                         P->parent_->left_ = P;
                     else
                         P->parent_->right_ = P;
                 }
+
+                else
+                    top_ = P;
+                
                 if (P->left_ == X){
+                    
                     G->left_ = P->right_;
                     P->right_ = G;
                     if (G->left_ != nullptr)
                         G->left_->parent_ = G;
                 }
                 else{
+                    
                     G->right_ = P->left_;
+                    
                     P->left_ = G;
+                    
                     if (G->right_ != nullptr)
                         G->right_->parent_ = G;
                 }
+                
+                return;
             }
 
             void balance_tree(iterator X){
                 // balancirovochka
+                
                 
                 iterator P = X->parent_;
                 if (P == nullptr){
@@ -190,6 +204,8 @@ namespace Trees {
                 else{
                     U = G->left_;
                 }
+
+                
                 
                 if (U != nullptr && U->color == 'R'){   // дядя красный
                 
@@ -203,6 +219,7 @@ namespace Trees {
                             balance_case_2(X, P, G);
                         }
                         else{
+                            
                             balance_case_3(X, P, G);
                         }
                     }
@@ -211,10 +228,12 @@ namespace Trees {
                             balance_case_2(X, P, G);
                         }
                         else{
+                            
                             balance_case_3(X, P, G);
                         }
                     }
                 }
+                return;
             }
 
             bool insert_rec(iterator X, iterator highest){
@@ -241,7 +260,7 @@ namespace Trees {
             void insert(KeyT key){
                 //Ищем нужное место, прицепляем с красным цветом, вызываем балансировку
                 Node * X = new Node(key);
-                cout << X << "\n";
+                //cout << X << "\n";
                 if (top_ == nullptr){
                     top_ = X;
                     X->color = 'B';
@@ -249,9 +268,43 @@ namespace Trees {
                 }
                 
                 if(insert_rec(X, top_)){
-                    //cout << endl << X->parent_->key_ << endl;
+                    
                     balance_tree(X);
+                    //cout << endl << X->parent_->key_ << endl;
                 }
+                return;
+            }
+
+            void dump_tree_(iterator curr){
+                
+                cout << "[" << curr->key_ << " : ";
+                if (curr->left_ == nullptr){
+                    if (curr->right_ == nullptr){
+                        cout << "null & null]\n";
+                    }
+                    else{
+                        cout << "null & " << curr->right_->key_ << "]\n";
+                        dump_tree_(curr->right_);
+                    }
+                }
+                else if (curr->right_ == nullptr){
+                    cout << curr->left_->key_ << " & null]\n";
+                    dump_tree_(curr->left_);
+                }
+                else{
+                    cout << curr->left_->key_ << " & " << curr->right_->key_ << "]\n";
+                    dump_tree_(curr->left_);
+                    dump_tree_(curr->right_);
+                }
+                return;
+            }
+
+            void dump_tree(){
+                if (top_ == nullptr){
+                    cout << "Empty!\n";
+                    return;
+                }
+                dump_tree_(top_);
                 return;
             }
     };
