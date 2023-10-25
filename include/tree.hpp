@@ -131,13 +131,15 @@ namespace Trees {
                     P->right_ = X->left_;
                     X->left_ = P;
                     G->left_ = X;
-                    P->right_->parent_ = P;
+                    if (P->right_ != nullptr)
+                        P->right_->parent_ = P;
                 }
                 else{
                     P->left_ = X->right_;
                     X->right_ = P;
                     G->right_ = X;
-                    P->left_->parent_ = P;
+                    if (P->left_ != nullptr)
+                        P->left_->parent_ = P;
                 }
                 balance_case_3(P, X, G);
             }
@@ -147,41 +149,57 @@ namespace Trees {
                 G->color = 'R';
                 P->parent_ = G->parent_;
                 G->parent_ = P;
-
-                if (P->parent_->left_ == G)
-                    P->parent_->left_ = P;
-                else
-                    P->parent_->right_ = P;
-                
+                if (P->parent_ != nullptr){
+                    if (P->parent_->left_ == G)
+                        P->parent_->left_ = P;
+                    else
+                        P->parent_->right_ = P;
+                }
                 if (P->left_ == X){
                     G->left_ = P->right_;
                     P->right_ = G;
-                    G->left_->parent_ = G;
+                    if (G->left_ != nullptr)
+                        G->left_->parent_ = G;
                 }
                 else{
                     G->right_ = P->left_;
                     P->left_ = G;
-                    G->right_->parent_ = G;
+                    if (G->right_ != nullptr)
+                        G->right_->parent_ = G;
                 }
             }
 
             void balance_tree(iterator X){
-                // balancirovka
+                // balancirovochka
+                
                 iterator P = X->parent_;
+                if (P == nullptr){
+                    return;
+                }
                 iterator G = P->parent_;
+                if (G == nullptr){
+                    return;
+                }
                 iterator U = nullptr;
+
+                
+                
                 if (G->left_ == P){
                     U = G->right_;
                 }
                 else{
                     U = G->left_;
                 }
-                if (U->color == 'R'){   // дядя красный
+                
+                if (U != nullptr && U->color == 'R'){   // дядя красный
+                
                     balance_case_1(P, G, U);
                 }
-                else if (U->color == 'B'){ // дядя черный
+                else if (U == nullptr || U->color == 'B'){ // дядя черный
+                    
                     if (P->right_ == X){
                         if (G->left_ == P){
+                            
                             balance_case_2(X, P, G);
                         }
                         else{
@@ -222,15 +240,18 @@ namespace Trees {
         public: // модификаторы
             void insert(KeyT key){
                 //Ищем нужное место, прицепляем с красным цветом, вызываем балансировку
-                Node X{key};
+                Node * X = new Node(key);
+                cout << X << "\n";
                 if (top_ == nullptr){
-                    top_ = &X;
+                    top_ = X;
+                    X->color = 'B';
                     return;
                 }
-                if(insert_rec(&X, top_)){
-                    balance_tree(&X);
+                
+                if(insert_rec(X, top_)){
+                    //cout << endl << X->parent_->key_ << endl;
+                    balance_tree(X);
                 }
-                cout << &X << "\n";
                 return;
             }
     };
