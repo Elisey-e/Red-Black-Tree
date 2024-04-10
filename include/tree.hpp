@@ -3,7 +3,18 @@
 
 #include <iostream>
 
+#include <stdlib.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 using std::cin, std::cout, std::endl;
+
+#define MAX_PROCECC_COUNT_TO_FORK 5
 
 namespace Trees {
 
@@ -34,6 +45,9 @@ namespace Trees {
             iterator find_node(iterator curr, KeyT& key) const{
                 if (curr == nullptr){
                     return nullptr;
+                }
+                if (curr->key_ == key){
+                    return curr;
                 }
                 iterator ans = nullptr;
                 if((ans = find_node(curr->left_, key)) != nullptr){
@@ -275,6 +289,27 @@ namespace Trees {
                 return;
             }
 
+            void pop_node(KeyT key){
+                top_ = nullptr;
+                for (int i = 1; i < key; i++){
+                    insert(i);
+                }
+                for(int i = key + 1; i <= 10; i++){
+                    insert(i);
+                }
+                // Node * X = find_node(top_, key);
+                // cout << X;
+                // if (X->parent_->left_ == X){
+                //     X->parent_->left_ = nullptr;
+                // }
+                // if (X->parent_->right_ == X){
+                //     X->parent_->right_ = nullptr;
+                // }
+                // //balance_tree(top_);
+                // delete X;
+                return;
+            }
+
             void dump_tree_(iterator curr){
                 
                 cout << "[" << curr->key_ << " : ";
@@ -306,6 +341,109 @@ namespace Trees {
                 }
                 dump_tree_(top_);
                 return;
+            }
+
+            KeyT non_parallel_summ(){
+                return non_parallel_summ(0, top_);
+            }
+
+            KeyT non_parallel_summ(KeyT sum, iterator X){
+                if (X == nullptr){
+                    return 0;
+                }
+                sum += X->key_ + non_parallel_summ(0, X->left_) + non_parallel_summ(0, X->right_);
+                return sum;
+            }
+
+            KeyT parallel_summ(){
+                int *array;
+                int shmid;
+                key_t key = 14641;
+
+
+                if ((shmid = shmget(key, 3 * sizeof(int), 0666 | IPC_CREAT | IPC_EXCL)) < 0){
+                    if (errno != EEXIST){
+                        printf("Cant cheate shared memory\n");
+                        exit(-1);
+                    }
+                    else{
+                        if((shmid = shmget(key, 3 * sizeof(int), 0)) < 0){
+                            printf("Cant find shared memory\n");
+                            exit(-1);
+                        }
+                    }
+                }
+
+                if ((array  = (int *) shmat(shmid, NULL, 0)) == (int*)(-1)){
+                    printf("cant attach shared memory");
+                    exit(-1);
+                }
+
+                array[0] = 0;
+                
+                parallel_summ(array, top_, 0);
+                sleep(1);
+                int ans = array[0];
+                if(shmdt(array) < 0){
+                    printf("Cant detach shared memory\n");
+                    exit(-1);
+                }
+                return ans;
+            }
+
+            void parallel_summ(int* array, iterator X, int process_count){
+                if (X == nullptr){
+                    return;
+                }
+
+                array[0] +=  X->key_;
+                
+                pid_t pid;
+                pid = fork();
+                ++process_count;
+
+                if (pid == -1){
+                    fprintf(stderr, "cannot fork!\n");
+                }
+                else if (pid == 0){
+                    if (process_count > MAX_PROCECC_COUNT_TO_FORK){
+                        array[0] += non_parallel_summ(0, X->left_);
+                    }
+                    else{
+                        parallel_summ(array, X->left_, process_count);
+                    }
+                    exit(-1);
+
+                }
+                pid_t pid2 = 0;
+                pid2 = fork();
+                ++process_count;
+
+                if (pid2 == -1){
+                    fprintf(stderr, "cannot fork!\n");
+                    return;
+                }
+                else if (pid2 == 0){
+                    //cout << "----------------\n";
+                    //cout << array[0] << "\n";
+                    if (process_count > MAX_PROCECC_COUNT_TO_FORK){
+                        array[0] += non_parallel_summ(0, X->right_);
+                    }
+                    else{
+                        parallel_summ(array, X->right_, process_count);
+                    }
+                    exit(-1);
+                    //cout << array[0] << "\n";
+                    //cout << "----------------\n";
+                    
+                }
+
+                if (pid > 0 && pid2 > 0){
+                    return;
+                }
+                else{
+                    exit(-1);
+                }
             }
     };
     
