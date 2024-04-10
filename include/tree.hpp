@@ -310,6 +310,20 @@ namespace Trees {
                 return;
             }
 
+            void pretty_dump(iterator curr, int deep){
+                if (curr == nullptr){
+                    return;
+                }
+                cout << curr->key_ << "\t";
+                pretty_dump(curr->left_, deep + 1);
+                cout << "\n";
+                for (int i = 0; i != deep + 1; ++i){
+                    cout << '\t';
+                }
+                pretty_dump(curr->right_, deep + 1);
+                return;
+            }
+
             void dump_tree_(iterator curr){
                 
                 cout << "[" << curr->key_ << " : ";
@@ -339,6 +353,8 @@ namespace Trees {
                     cout << "Empty!\n";
                     return;
                 }
+                pretty_dump(top_, 0);
+                cout << '\n';
                 dump_tree_(top_);
                 return;
             }
